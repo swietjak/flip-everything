@@ -1,13 +1,16 @@
 {
   "name": "image-caption-app",
   "private": true,
+  "homepage": "https://swietjak.github.io/flip-everything",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "react": "^19.1.0",
