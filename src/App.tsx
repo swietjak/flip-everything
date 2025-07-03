@@ -43,8 +43,16 @@ const App: React.FC = () => {
       canvas.height = img.height;
 
       // Draw image
+      ctx.save();
+      if (now.getDate() % 2 == 0) {
+        ctx.translate(canvas.width, 0)
+        ctx.scale(-1, 1)
+      }
+      const saturationCoef = (31 - (now.getDate()/2))/31 * 100
+      console.log(saturationCoef)
+      ctx.filter = `saturate(${saturationCoef}%)`
       ctx.drawImage(img, 0, 0);
-
+      ctx.restore()
       // Set caption styles
       const fontSize = Math.max(24, img.width * 0.07);
       ctx.font = `${fontSize}px sans-serif`;
