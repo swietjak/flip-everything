@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+
+h1 {
+  display: block;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

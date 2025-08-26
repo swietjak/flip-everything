@@ -1,26 +1,26 @@
-import React, { useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import "./i18.ts";
+import "./App.css";
 
-function ordinal(n: number): string {
-  const suffixes = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
-}
-
-function getMonthName(date: Date): string {
-  return date.toLocaleString("default", { month: "long" });
-}
+const lngs = {
+  en: { nativeName: "English" },
+  de: { nativeName: "Deutsch" },
+};
 
 const App: React.FC = () => {
+  const { t, i18n } = useTranslation("translation");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setImageFile(file);
+    drawCaptionOnImage(file)
   };
 
-  const drawCaptionOnImage = () => {
-    if (!imageFile || !canvasRef.current) return;
+  const drawCaptionOnImage = (file: File | null) => {
+    if (!file || !canvasRef.current) return;
 
     const now = new Date();
 
@@ -29,9 +29,9 @@ const App: React.FC = () => {
     tomorrow.setDate(now.getDate() + 1);
 
     // Build captions
-    const top_caption = `Damn it's ${getMonthName(now)} ${ordinal(now.getDate())} already?`;
-    const mid_text = `What's next?`;
-    const bottom_text = `${getMonthName(tomorrow)} ${ordinal(tomorrow.getDate())}? Fuck everything`;
+    const top_caption = t("upperText", { date: now });
+    const mid_text = t("whatsNext");
+    const bottom_text = t("lowerText", { date: tomorrow });
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -45,17 +45,20 @@ const App: React.FC = () => {
       // Draw image
       ctx.save();
       if (now.getDate() % 2 == 0) {
-        ctx.translate(canvas.width, 0)
-        ctx.scale(-1, 1)
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
       }
-      const saturationCoef = (31 - (now.getDate()/2))/31 * 100
-      console.log(saturationCoef)
-      ctx.filter = `saturate(${saturationCoef}%)`
+      const saturationCoef = ((31 - now.getDate() / 2) / 31) * 100;
+      console.log(saturationCoef);
+      ctx.filter = `saturate(${saturationCoef}%)`;
       ctx.drawImage(img, 0, 0);
-      ctx.restore()
+      ctx.restore();
       // Set caption styles
-      const fontSize = Math.max(24, img.width * 0.07);
-      ctx.font = `${fontSize}px sans-serif`;
+      const fontSize = Math.max(24, img.width * 0.075);
+      if (i18n.resolvedLanguage === "de")
+        ctx.font = `${fontSize}px 'UnifrakturCook'`;
+      else ctx.font = `${fontSize}px sans-serif`;
+
       ctx.fillStyle = "white";
       ctx.strokeStyle = "black";
       ctx.lineWidth = 3;
@@ -81,7 +84,7 @@ const App: React.FC = () => {
       // Stroke + Fill for readability
       ctx.strokeText(mid_text, mid_x, mid_y);
       ctx.fillText(mid_text, mid_x, mid_y);
-      
+
       // Caption position
       const bottom_x = canvas.width / 2;
       const bottom_y = canvas.height - fontSize * 1.4;
@@ -93,25 +96,34 @@ const App: React.FC = () => {
       ctx.strokeText(bottom_text, bottom_x, bottom_y);
       ctx.fillText(bottom_text, bottom_x, bottom_y);
     };
-    img.src = URL.createObjectURL(imageFile);
+    img.src = URL.createObjectURL(file);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Image Caption Tool</h1>
-
-      <input type="file" accept="image/*" onChange={handleImageUpload} />
-      <button
-        onClick={drawCaptionOnImage}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-        disabled={!imageFile}
-      >
-        Add Caption
-      </button>
-      <div>
-      <canvas ref={canvasRef} className="border rounded max-w-full" />
+    <Suspense>
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 space-y-4">
+        <header>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <select
+            name="cars"
+            id="cars"
+            onChange={(e) => {
+              i18n.changeLanguage(e.target.value);
+              drawCaptionOnImage(imageFile);
+            }}
+            value={i18n.resolvedLanguage}
+          >
+            {Object.keys(lngs).map((lng) => (
+              <option value={lng}>{lngs[lng].nativeName}</option>
+            ))}
+          </select>
+        </header>
+        <input type="file" accept="image/*" onChange={handleImageUpload} />
+        <div>
+          <canvas ref={canvasRef} className="border rounded max-w-full" />
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 
