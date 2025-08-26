@@ -1,6 +1,0 @@
-{
-    "title": "Flip everything",
-    "upperText": "Damn it's {{date, DATE_HUGE}}?",
-    "whatsNext": "What's next?",
-    "lowerText": "{{date, DATE_HUGE}}? Fuck everything"
-}
